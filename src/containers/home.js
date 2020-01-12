@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { loadMessages } from '../action-creators/messages';
+import { sortByDate } from '../utils';
+import MessageList from './messageList';
 
 class Home extends React.Component {
   componentDidMount() {
@@ -10,21 +11,41 @@ class Home extends React.Component {
   }
 
   render() {
-    return <div>This is Test</div>;
+    const { isLoading, errorMessage, messages } = this.props;
+    if (isLoading) {
+      return <p>Loading....</p>;
+    }
+
+    if (!isLoading && errorMessage) {
+      return <p>{errorMessage}</p>;
+    }
+
+    return (
+      <div className="container">
+        <MessageList messages={messages} />
+      </div>
+    );
   }
 }
 
-const mapStateToProps = state => ({
-  messages: state.messages,
+const mapStateToProps = ({ messages }) => ({
+  messages: sortByDate(messages.messages),
+  isLoading: messages.isLoading,
+  errorMessage: messages.errorMessage,
 });
 
-const mapDispatchToProps = dispatch => bindActionCreators({ loadMessages }, dispatch);
+Home.defaultProps = {
+  errorMessage: 'something went wrong',
+};
 
 Home.propTypes = {
   loadMessages: PropTypes.func,
+  errorMessage: PropTypes.string.isRequired,
+  messages: PropTypes.arrayOf(PropTypes.object),
+  isLoading: PropTypes.bool.isRequired,
 };
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  { loadMessages }
 )(Home);
